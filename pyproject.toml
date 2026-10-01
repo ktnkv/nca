@@ -1,5 +1,5 @@
 [project]
-name = "nca"
+name = "neural-ca"
 version = "0.1.0"
 description = "Neural cellular automata on PyTorch"
 readme = "README.md"
@@ -20,6 +20,9 @@ dependencies = ["torch>=2.2"]
 
 [project.urls]
 Repository = "https://github.com/mkotenkov/nca"
+
+[tool.uv.build-backend]
+module-name = "nca"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

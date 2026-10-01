@@ -1,4 +1,4 @@
-# nca
+# neural-ca
 
 Neural cellular automata on PyTorch, with a pluggable neighborhood and optional
 rotation-invariant inputs.
@@ -10,7 +10,19 @@ an external dependency and knows nothing about images or geometry.
 ## Installation
 
 ```bash
-pip install .          # or: uv add .
+pip install neural-ca  # or: uv add neural-ca
+```
+
+The import name is `nca`:
+
+```python
+import nca
+```
+
+From source:
+
+```bash
+pip install .
 ```
 
 Development setup:
