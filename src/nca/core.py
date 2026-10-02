@@ -13,6 +13,23 @@ def _rot90(o: tuple[int, int]) -> tuple[int, int]:
     return -o[1], o[0]
 
 
+def _resolve_offsets(neighborhood: str | Offsets) -> Offsets:
+    """Look up a named neighborhood or validate a custom one."""
+    if isinstance(neighborhood, str):
+        if neighborhood not in NEIGHBORHOODS:
+            raise ValueError(f"unknown neighborhood {neighborhood!r}, available: {list(NEIGHBORHOODS)}")
+        return NEIGHBORHOODS[neighborhood]
+    try:
+        offsets = tuple((int(dy), int(dx)) for dy, dx in neighborhood)
+    except (TypeError, ValueError) as e:
+        raise ValueError("neighborhood must be a name or a sequence of (dy, dx) int pairs") from e
+    if not offsets or offsets[0] != (0, 0):
+        raise ValueError("(0, 0) must be the first offset")
+    if len(set(offsets)) != len(offsets):
+        raise ValueError("neighborhood contains duplicate offsets")
+    return offsets
+
+
 def _orbits(offsets: Offsets) -> list[list[int]]:
     """Orbits of the non-center offsets under 90-degree rotation (indices into offsets)."""
     index = {o: i for i, o in enumerate(offsets)}
@@ -55,10 +72,18 @@ class NCA(nn.Module):
         residual: bool = False,
     ):
         super().__init__()
+        if isinstance(channels, bool) or not isinstance(channels, int) or channels < 1:
+            raise ValueError(f"channels must be a positive int, got {channels!r}")
+        if padding not in _PAD_MODES:
+            raise ValueError(f"padding must be one of {list(_PAD_MODES)}, got {padding!r}")
+        for name, flag in (("invariant", invariant), ("residual", residual)):
+            if not isinstance(flag, bool):
+                raise TypeError(f"{name} must be a bool, got {flag!r}")
+        offsets = _resolve_offsets(neighborhood)
+        if invariant and len(offsets) == 1:
+            raise ValueError("invariant=True needs at least one non-center cell")
+
         self.residual = residual
-        offsets = NEIGHBORHOODS[neighborhood] if isinstance(neighborhood, str) else tuple(map(tuple, neighborhood))
-        if offsets[0] != (0, 0):
-            raise ValueError("(0, 0) must be the first offset")
         self.offsets, self.channels, self.invariant = offsets, channels, invariant
         self.radius = max(max(abs(dy), abs(dx)) for dy, dx in offsets)
         self.padding = _PAD_MODES[padding]

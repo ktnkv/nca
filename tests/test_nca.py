@@ -44,6 +44,37 @@ def test_raw_matches_unfold(name):
     assert torch.allclose(nca.perceive(x), ref)
 
 
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"neighborhood": "nope"},
+        {"neighborhood": ()},
+        {"neighborhood": ((0, 1), (0, 0))},
+        {"neighborhood": ((0, 0), (0, 1), (0, 1))},
+        {"neighborhood": ((0, 0), (1,))},
+        {"neighborhood": ((0, 0),), "invariant": True},
+        {"channels": 0},
+        {"channels": 1.5},
+        {"channels": True},
+        {"padding": "wrap"},
+    ],
+)
+def test_invalid_args_raise_value_error(kwargs):
+    with pytest.raises(ValueError):
+        NCA(**kwargs)
+
+
+def test_non_bool_flags_raise_type_error():
+    with pytest.raises(TypeError):
+        NCA(invariant=1)
+    with pytest.raises(TypeError):
+        NCA(residual="yes")
+
+
+def test_custom_neighborhood_ok():
+    assert NCA(((0, 0), (0, 1), (1, 0), (0, -1), (-1, 0))).in_features == 20
+
+
 def test_non_closed_neighborhood_raises():
     with pytest.raises(ValueError):
         NCA(((0, 0), (0, 1)), invariant=True)
